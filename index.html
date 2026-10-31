@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PhishLens EDU | URL Safety Lab</title>
+<title>Link Shield | URL Safety Lab</title>
 <style>
 :root{--bg:#0b1220;--panel:#131e30;--line:#293950;--text:#edf4ff;--muted:#a6b6cc;--cyan:#67e8f9}
 *{box-sizing:border-box}
@@ -42,12 +42,12 @@ footer{border-top:1px solid var(--line);font-size:13px}
   <div class="brand">
     <div class="logo">⌕</div>
     <div>
-      <h1>PhishLens EDU</h1>
+      <h1>LInk Shield</h1>
       <div class="muted">Explainable URL Safety Lab</div>
     </div>
   </div>
   <p>Look beyond the link. Understand the warning signs.</p>
-  <span class="tag">STUDENT CYBERSECURITY PROJECT</span>
+  <span class="tag">CYBERSECURITY PROJECT</span>
 </header>
 
 <main>
@@ -94,7 +94,7 @@ footer{border-top:1px solid var(--line);font-size:13px}
 </main>
 
 <footer>
-  PhishLens EDU is an educational demonstration. It analyzes the text structure of a URL only; it does not visit websites, verify ownership, or guarantee safety.
+  Link Shield is an educational demonstration. It analyzes the text structure of a URL only; it does not visit websites, verify ownership, or guarantee safety.
 </footer>
 
 <script>
@@ -109,9 +109,10 @@ const findingsBox = document.getElementById("findings");
 const bar = document.getElementById("bar");
 
 const demoURLs = {
-  safe: "https://www.example.com/",
-  review: "http://account.example-login.com/verify",
-  caution: "http://192.0.2.10/login/secure-account"
+  safe: "https://www.onlinesbi.sbi/",
+  review: "https://https://www.coca-cola.com/in/en",
+  caution: "http://192.0.2.10/login/secure-account",
+  caution: "https://sbi-netbanking-lock.in"
 };
 
 function addFinding(findings, points, message) {
