@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PhishLens EDU | URL Safety Lab</title>
+<style>
+:root{--bg:#0b1220;--panel:#131e30;--line:#293950;--text:#edf4ff;--muted:#a6b6cc;--cyan:#67e8f9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Arial,sans-serif}
+header,main,footer{max-width:1000px;margin:auto;padding:22px}
+header{border-bottom:1px solid var(--line)}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{background:#153e55;color:var(--cyan);padding:10px;border-radius:12px;font-size:25px}
+h1{font-size:clamp(25px,5vw,38px);margin:0}
+h2{font-size:20px}
+p,.muted{color:var(--muted)}
+.tag{display:inline-block;color:var(--cyan);border:1px solid #276174;border-radius:30px;padding:3px 10px;font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0;min-width:0}
+label{display:block;font-weight:bold;margin:12px 0 6px}
+input{width:100%;padding:13px;background:#09111e;color:white;border:1px solid #41536c;border-radius:9px;font-size:16px}
+button{cursor:pointer;padding:11px 15px;border-radius:9px;border:1px solid #3c6078;background:#173b53;color:white;font-weight:bold;margin:5px 4px 5px 0}
+button.primary{background:#0e7490;border-color:#22d3ee}
+button:hover{filter:brightness(1.2)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.stat{font-size:36px;font-weight:bold}
+.pill{display:inline-block;border-radius:30px;padding:4px 10px;font-weight:bold;border:1px solid var(--line)}
+.green{color:#86efac}.yellow{color:#fde68a}.red{color:#fca5a5}
+.result{border-left:4px solid var(--cyan);padding-left:14px}
+li{margin:9px 0;overflow-wrap:anywhere}
+small{color:var(--muted)}
+#findings{padding-left:22px}
+#bar{transition:width .25s ease}
+.note{font-size:13px;color:var(--muted)}
+footer{border-top:1px solid var(--line);font-size:13px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">⌕</div>
+    <div>
+      <h1>PhishLens EDU</h1>
+      <div class="muted">Explainable URL Safety Lab</div>
+    </div>
+  </div>
+  <p>Look beyond the link. Understand the warning signs.</p>
+  <span class="tag">STUDENT CYBERSECURITY PROJECT</span>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="panel">
+      <h2>01 / Inspect a URL</h2>
+      <p>Enter a URL as text. This tool will not open it.</p>
+      <form id="scanForm">
+        <label for="url">URL to analyze</label>
+        <input id="url" maxlength="2048" placeholder="https://example.com"
+          autocomplete="off" spellcheck="false" required>
+        <button class="primary" type="submit">Analyze URL →</button>
+      </form>
+      <p><small>Never enter passwords, OTPs or private information.</small></p>
+      <h3>Try a test case</h3>
+      <button type="button" data-demo="safe">Example A</button>
+      <button type="button" data-demo="review">Example B</button>
+      <button type="button" data-demo="caution">Example C</button>
+      <p><small>These are illustrative test cases, not live threat reports.</small></p>
+    </section>
+
+    <section class="panel">
+      <h2>02 / Risk assessment</h2>
+      <div id="status" aria-live="polite" role="status">
+        <span class="pill">AWAITING INPUT</span>
+      </div>
+      <div class="stat" id="score">—<small> / 100</small></div>
+      <p id="summary">Analyze a sample URL to see the report.</p>
+      <div id="meter" style="height:9px;background:#293950;border-radius:10px;overflow:hidden">
+        <div id="bar" style="width:0;height:100%;background:#67e8f9"></div>
+      </div>
+      <h3>Why this score?</h3>
+      <ul id="findings"><li class="muted">Your findings will appear here.</li></ul>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>03 / What this result means</h2>
+    <p><strong>Low (0–29):</strong> Few of the selected warning signs were detected.</p>
+    <p><strong>Medium (30–59):</strong> Some warning signs were detected. Check the link carefully.</p>
+    <p><strong>High (60–100):</strong> Several warning signs were detected. Avoid interacting with the link unless independently verified.</p>
+    <p class="note">This prototype uses simple rules, not threat-intelligence feeds or machine learning. A low score does not prove that a website is legitimate, and a high score does not prove malicious intent.</p>
+  </section>
+</main>
+
+<footer>
+  PhishLens EDU is an educational demonstration. It analyzes the text structure of a URL only; it does not visit websites, verify ownership, or guarantee safety.
+</footer>
+
+<script>
+"use strict";
+
+const form = document.getElementById("scanForm");
+const urlInput = document.getElementById("url");
+const statusBox = document.getElementById("status");
+const scoreBox = document.getElementById("score");
+const summaryBox = document.getElementById("summary");
+const findingsBox = document.getElementById("findings");
+const bar = document.getElementById("bar");
+
+const demoURLs = {
+  safe: "https://www.example.com/",
+  review: "http://account.example-login.com/verify",
+  caution: "http://192.0.2.10/login/secure-account"
+};
+
+function addFinding(findings, points, message) {
+  findings.push({ points, message });
+}
+
+function analyzeURL(rawValue) {
+  const raw = rawValue.trim();
+  if (!raw) throw new Error("Please enter a URL.");
+
+  // Add a scheme only to make common pasted hostnames parseable.
+  const candidate = /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(raw) ? raw : "https://" + raw;
+  let parsed;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    throw new Error("That doesn't look like a valid URL. Check the spelling and try again.");
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error("Only HTTP and HTTPS URLs can be checked by this prototype.");
+  }
+  if (!parsed.hostname || parsed.username || parsed.password) {
+    throw new Error("Please enter a URL with a valid hostname and no embedded login details.");
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  const findings = [];
+
+  if (parsed.protocol === "http:") {
+    addFinding(findings, 20, "The link uses HTTP rather than HTTPS. Its connection is not protected by HTTPS.");
+  }
+
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(host) || /^\[[0-9a-f:]+\]$/i.test(host)) {
+    addFinding(findings, 25, "The hostname is an IP address rather than a conventional domain name.");
+  }
+
+  const labels = host.split(".");
+  if (labels.length >= 5) {
+    addFinding(findings, 15, "The hostname contains many subdomain levels.");
+  }
+
+  if (host.includes("xn--")) {
+    addFinding(findings, 20, "The hostname contains an internationalized/punycode label. Check carefully for look-alike characters.");
+  }
+
+  if (host.split("").filter(ch => ch === "-").length >= 3) {
+    addFinding(findings, 10, "The hostname contains several hyphens, which can make domain names harder to read.");
+  }
+
+  const suspiciousTerms = ["login", "verify", "update", "secure", "account", "password", "wallet", "banking", "confirm"];
+  const fullText = (host + parsed.pathname + parsed.search).toLowerCase();
+  const matchedTerms = suspiciousTerms.filter(term => fullText.includes(term));
+  if (matchedTerms.length) {
+    addFinding(findings, Math.min(20, matchedTerms.length * 5),
+      "The URL contains account-related or action-related terms: " + matchedTerms.join(", ") + ".");
+  }
+
+  if (raw.includes("@")) {
+    addFinding(findings, 15, "The URL contains an @ symbol, which can make the actual destination confusing.");
+  }
+
+  if (host.length > 40) {
+    addFinding(findings, 10, "The hostname is unusually long.");
+  }
+
+  if (parsed.port && !["80", "443"].includes(parsed.port)) {
+    addFinding(findings, 10, "The URL specifies a non-standard port.");
+  }
+
+  if (!findings.length) {
+    findings.push({points: 0, message: "No warning signs from this prototype's selected rules were detected."});
+  }
+
+  const score = Math.min(100, findings.reduce((sum, item) => sum + item.points, 0));
+  return { score, findings, hostname: host };
+}
+
+function showResult(result) {
+  const {score, findings} = result;
+  let level, className, explanation, color;
+
+  if (score >= 60) {
+    level = "HIGH RISK"; className = "red"; color = "#f87171";
+    explanation = "Several warning signs were detected. Do not interact with this link unless it is independently verified.";
+  } else if (score >= 30) {
+    level = "MEDIUM RISK"; className = "yellow"; color = "#fbbf24";
+    explanation = "Some warning signs were detected. Check the domain carefully before trusting it.";
+  } else {
+    level = "LOW INDICATED RISK"; className = "green"; color = "#4ade80";
+    explanation = "Few warning signs were detected by these rules. This does not prove the URL is safe.";
+  }
+
+  statusBox.innerHTML = "";
+  const pill = document.createElement("span");
+  pill.className = "pill " + className;
+  pill.textContent = level;
+  statusBox.appendChild(pill);
+
+  scoreBox.textContent = String(score);
+  const suffix = document.createElement("small");
+  suffix.textContent = " / 100";
+  scoreBox.appendChild(suffix);
+
+  summaryBox.textContent = explanation;
+  bar.style.width = score + "%";
+  bar.style.background = color;
+
+  findingsBox.replaceChildren();
+  findings.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = (item.points ? "+" + item.points + " points — " : "") + item.message;
+    findingsBox.appendChild(li);
+  });
+}
+
+form.addEventListener("submit", event => {
+  event.preventDefault();
+  try {
+    const result = analyzeURL(urlInput.value);
+    showResult(result);
+  } catch (error) {
+    statusBox.textContent = "INPUT ERROR";
+    scoreBox.textContent = "—";
+    summaryBox.textContent = error.message;
+    bar.style.width = "0";
+    findingsBox.replaceChildren();
+  }
+});
+
+document.querySelectorAll("[data-demo]").forEach(button => {
+  button.addEventListener("click", () => {
+    urlInput.value = demoURLs[button.dataset.demo];
+    form.requestSubmit();
+  });
+});
+</script>
+</body>
+</html>
