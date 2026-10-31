@@ -87,9 +87,9 @@ footer{border-top:1px solid var(--line);font-size:13px}
 
   <section class="panel">
     <h2>03 / What this result means</h2>
-    <p><strong>Low (0–29):</strong> Few of the selected warning signs were detected.</p>
-    <p><strong>Medium (30–59):</strong> Some warning signs were detected. Check the link carefully and avoid interacting with the link.</p>
-    <p><strong>High (60–100):</strong> Several warning signs were detected. Avoid interacting with the link unless independently verified.</p>
+    <p><strong> Low (0–29):</strong> Few of the selected warning signs were detected.</p>
+    <p><strong>High (30–59):</strong> Some warning signs were detected. Check the link carefully and avoid interacting with the link.</p>
+    <p><strong>Very High (60–100):</strong> Several warning signs were detected. Avoid interacting with the link unless independently verified.</p>
     <p class="note">This prototype uses local URL-pattern rules, not live threat-intelligence feeds or machine learning. A low score does not prove that a website is legitimate, and a high score does not prove malicious intent.</p>
   </section>
 </main>
@@ -153,15 +153,15 @@ function analyzeURL(rawValue) {
 
   const labels = host.split(".");
   if (labels.length >= 5) {
-    addFinding(findings, 15, "The hostname contains many subdomain levels.");
+    addFinding(findings, 20, "The hostname contains many subdomain levels.");
   }
 
   if (host.includes("xn--")) {
-    addFinding(findings, 20, "The hostname contains an internationalized/punycode label. Check carefully for look-alike characters.");
+    addFinding(findings, 25, "The hostname contains an internationalized/punycode label. Check carefully for look-alike characters.");
   }
 
   if (host.split("").filter(ch => ch === "-").length >= 2) {
-    addFinding(findings, 15, "The hostname contains multiple hyphens, which can make a domain harder to read and may be used in lookalike names.");
+    addFinding(findings, 20, "The hostname contains multiple hyphens, which can make a domain harder to read and may be used in lookalike names.");
   }
 
   const suspiciousTerms = ["login", "log-in", "verify", "verification", "update", "secure", "security", "account", "password", "wallet", "banking", "confirm", "kyc", "quick", "now", "lock"];
