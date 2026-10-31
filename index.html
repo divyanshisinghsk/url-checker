@@ -197,10 +197,10 @@ function showResult(result) {
   let level, className, explanation, color;
 
   if (score >= 60) {
-    level = "HIGH RISK"; className = "red"; color = "#f87171";
+    level = "VERY HIGH RISK"; className = "red"; color = "#f87171";
     explanation = "Several warning signs were detected. Do not interact with this link unless it is independently verified.";
   } else if (score >= 30) {
-    level = "MEDIUM RISK"; className = "yellow"; color = "#fbbf24";
+    level = "HIGH RISK"; className = "yellow"; color = "#fbbf24";
     explanation = "Some warning signs were detected. Check the domain carefully before trusting it.";
   } else {
     level = "LOW INDICATED RISK"; className = "green"; color = "#4ade80";
